@@ -1,0 +1,48 @@
+name: Build AppImage
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  workflow_dispatch: # Permite rodar manualmente
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04 # Recomendado usar uma versão mais antiga para maior compatibilidade de glibc
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y python3-tk python3-pip libfuse2 # libfuse2 é necessário para rodar AppImages no Runner
+
+      - name: Download LinuxDeploy and Python Plugin
+        run: |
+          wget https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage
+          wget https://github.com/linuxdeploy/linuxdeploy-plugin-python/releases/download/continuous/linuxdeploy-plugin-python-x86_64.AppImage
+          chmod +x linuxdeploy-x86_64.AppImage
+          chmod +x linuxdeploy-plugin-python-x86_64.AppImage
+
+      - name: Build AppImage
+        env:
+          PYTHON_VERSION: "3.11"
+          APPIMAGETOOL_CACHE_ALLOWED: "1"
+          OUTPUT: "RockNix_Manager-x86_64.AppImage"
+        run: |
+          # O linuxdeploy precisa que o ícone e o desktop estejam presentes
+          # -e aponta para o seu script principal
+          ./linuxdeploy-x86_64.AppImage --appdir AppDir \
+            -e rocknix_manager.py \
+            -d rocknix-manager.desktop \
+            -i icon.png \
+            --plugin python \
+            --output appimage
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: RockNix-Manager-AppImage
+          path: RockNix_Manager-x86_64.AppImage
