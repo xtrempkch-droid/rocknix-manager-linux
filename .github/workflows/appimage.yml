@@ -1,45 +1,37 @@
+name: Build RockNix Manager AppImage
 
-- name: Build AppImage
-        env:
-          PYTHON_VERSION: "3.11"
-          APPIMAGETOOL_CACHE_ALLOWED: "1"
-          # Isso ajuda o plugin a encontrar o Tkinter no Ubuntu
-          TK_LIBRARY: "/usr/share/tcltk/tk8.6"
-          TCL_LIBRARY: "/usr/share/tcltk/tcl8.6"
 on:
   push:
     branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
-  workflow_dispatch: # Permite rodar manualmente
+  workflow_dispatch:
 
 jobs:
   build:
-    runs-on: ubuntu-22.04 # Recomendado usar uma versão mais antiga para maior compatibilidade de glibc
+    runs-on: ubuntu-22.04
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install Dependencies
+      - name: Instalar Dependências do Sistema
         run: |
           sudo apt-get update
-          sudo apt-get install -y python3-tk python3-pip libfuse2 # libfuse2 é necessário para rodar AppImages no Runner
+          sudo apt-get install -y python3-tk python3-pip libfuse2 python3-dev
 
-      - name: Download LinuxDeploy and Python Plugin
+      - name: Baixar Ferramentas de Build
         run: |
           wget https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage
           wget https://github.com/linuxdeploy/linuxdeploy-plugin-python/releases/download/continuous/linuxdeploy-plugin-python-x86_64.AppImage
           chmod +x linuxdeploy-x86_64.AppImage
           chmod +x linuxdeploy-plugin-python-x86_64.AppImage
 
-      - name: Build AppImage
+      - name: Gerar AppImage
         env:
           PYTHON_VERSION: "3.11"
           APPIMAGETOOL_CACHE_ALLOWED: "1"
-          OUTPUT: "RockNix_Manager-x86_64.AppImage"
+          OUTPUT: "RockNix_Manager-Linux.AppImage"
         run: |
-          # O linuxdeploy precisa que o ícone e o desktop estejam presentes
-          # -e aponta para o seu script principal
+          # Criar um arquivo de ícone simples se não existir
+          touch icon.png 
           ./linuxdeploy-x86_64.AppImage --appdir AppDir \
             -e rocknix_manager.py \
             -d rocknix-manager.desktop \
@@ -47,8 +39,8 @@ jobs:
             --plugin python \
             --output appimage
 
-      - name: Upload Artifact
+      - name: Salvar Arquivo Pronto
         uses: actions/upload-artifact@v4
         with:
-          name: RockNix-Manager-AppImage
-          path: RockNix_Manager-x86_64.AppImage
+          name: RockNix-Manager-Linux
+          path: RockNix_Manager-Linux.AppImage
