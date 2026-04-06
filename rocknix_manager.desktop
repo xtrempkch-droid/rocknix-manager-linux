@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=Rocknix Manager
+Exec=rocknix_manager
+Icon=rocknix_manager
+Categories=Game;Utility;
+Terminal=false
