@@ -1,7 +1,8 @@
 [Desktop Entry]
 Type=Application
-Name=Rocknix Manager
+Name=RockNix Manager Linux
 Exec=rocknix_manager
 Icon=rocknix_manager
-Categories=Game;Utility;
+Categories=Utility;
+Comment=Gerenciador para consoles RockNix
 Terminal=false
