@@ -1,6 +1,11 @@
 
-name: Build AppImage
-
+- name: Build AppImage
+        env:
+          PYTHON_VERSION: "3.11"
+          APPIMAGETOOL_CACHE_ALLOWED: "1"
+          # Isso ajuda o plugin a encontrar o Tkinter no Ubuntu
+          TK_LIBRARY: "/usr/share/tcltk/tk8.6"
+          TCL_LIBRARY: "/usr/share/tcltk/tcl8.6"
 on:
   push:
     branches: [ "main" ]
