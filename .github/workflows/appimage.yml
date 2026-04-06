@@ -12,20 +12,21 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Instalar Dependências do Sistema
+      - name: Instalar Dependências do Sistema (Qt6)
         run: |
           sudo apt-get update
-          sudo apt-get install -y python3-tk python3-pip libfuse2 python3-dev binutils
+          # Bibliotecas vitais para o PyQt6 funcionar no Linux
+          sudo apt-get install -y python3-pip libfuse2 binutils libxcb-cursor0 libxkbcommon-x11-0 libegl1-mesa libfontconfig1 libdbus-1-3
 
-      - name: Instalar PyInstaller
+      - name: Instalar Python e Bibliotecas
         run: |
-          # O PyInstaller vai transformar seu .py em um executável Linux real
           python3 -m pip install --upgrade pip
-          python3 -m pip install pyinstaller
+          # Aqui instalamos o PyQt6 e o PyInstaller
+          python3 -m pip install PyQt6 pyinstaller
 
-      - name: Transformar Script em Executável
+      - name: Criar Executável (PyInstaller)
         run: |
-          # Isso cria um arquivo único que roda no Linux sem precisar de Python instalado
+          # O PyInstaller agora vai encontrar o PyQt6 instalado
           pyinstaller --onefile --windowed --name rocknix_manager rocknix_manager.py
 
       - name: Baixar AppImage Tool
@@ -38,17 +39,18 @@ jobs:
           mkdir -p RockNix.AppDir/usr/bin
           cp dist/rocknix_manager RockNix.AppDir/usr/bin/
           
-          # Criar ícone e desktop se não existirem
+          # Criar ícone e arquivo de menu (Desktop)
           touch icon.png
           echo -e "[Desktop Entry]\nType=Application\nName=RockNix Manager\nExec=rocknix_manager\nIcon=icon\nCategories=Utility;" > RockNix.AppDir/rocknix-manager.desktop
           cp icon.png RockNix.AppDir/icon.png
           
-          # Criar o AppRun (o coração do AppImage)
+          # Criar o inicializador (AppRun)
           echo -e '#!/bin/sh\nHERE="$(dirname "$(readlink -f "${0}")")"\nexec "${HERE}/usr/bin/rocknix_manager" "$@"' > RockNix.AppDir/AppRun
           chmod +x RockNix.AppDir/AppRun
 
       - name: Gerar Arquivo Final AppImage
         run: |
+          # Gera o arquivo .AppImage final
           ARCH=x86_64 ./appimagetool-x86_64.AppImage RockNix.AppDir RockNix_Manager-Linux.AppImage
 
       - name: Salvar Arquivo Pronto
