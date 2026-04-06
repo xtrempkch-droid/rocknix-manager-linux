@@ -15,31 +15,41 @@ jobs:
       - name: Instalar Dependências do Sistema
         run: |
           sudo apt-get update
-          sudo apt-get install -y python3-tk python3-pip libfuse2 python3-dev
+          sudo apt-get install -y python3-tk python3-pip libfuse2 python3-dev binutils
 
-      - name: Instalar Gerador de AppImage Python
+      - name: Instalar PyInstaller
         run: |
-          # Instalando a ferramenta que empacota o Python de forma estável
-          python3 -m pip install targeted-python-appimage
+          # O PyInstaller vai transformar seu .py em um executável Linux real
+          python3 -m pip install --upgrade pip
+          python3 -m pip install pyinstaller
 
-      - name: Gerar AppImage
+      - name: Transformar Script em Executável
         run: |
-          # Criando arquivos básicos necessários para o pacote não dar erro
-          touch icon.png
+          # Isso cria um arquivo único que roda no Linux sem precisar de Python instalado
+          pyinstaller --onefile --windowed --name rocknix_manager rocknix_manager.py
+
+      - name: Baixar AppImage Tool
+        run: |
+          wget https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage
+          chmod +x appimagetool-x86_64.AppImage
+
+      - name: Preparar Estrutura AppDir
+        run: |
+          mkdir -p RockNix.AppDir/usr/bin
+          cp dist/rocknix_manager RockNix.AppDir/usr/bin/
           
-          # Se o seu arquivo desktop não existir, este comando cria um básico
-          if [ ! -f rocknix-manager.desktop ]; then
-            echo -e "[Desktop Entry]\nType=Application\nName=RockNix Manager\nExec=rocknix_manager\nIcon=icon\nCategories=Utility;" > rocknix-manager.desktop
-          fi
+          # Criar ícone e desktop se não existirem
+          touch icon.png
+          echo -e "[Desktop Entry]\nType=Application\nName=RockNix Manager\nExec=rocknix_manager\nIcon=icon\nCategories=Utility;" > RockNix.AppDir/rocknix-manager.desktop
+          cp icon.png RockNix.AppDir/icon.png
+          
+          # Criar o AppRun (o coração do AppImage)
+          echo -e '#!/bin/sh\nHERE="$(dirname "$(readlink -f "${0}")")"\nexec "${HERE}/usr/bin/rocknix_manager" "$@"' > RockNix.AppDir/AppRun
+          chmod +x RockNix.AppDir/AppRun
 
-          # Comando para construir o AppImage do seu script
-          # Ele vai baixar o Python isolado e colocar seu script dentro
-          python3 -m targeted_python_appimage \
-            --python-version 3.11 \
-            --executable rocknix_manager.py \
-            --desktop-file rocknix-manager.desktop \
-            --icon-file icon.png \
-            --output RockNix_Manager-Linux.AppImage
+      - name: Gerar Arquivo Final AppImage
+        run: |
+          ARCH=x86_64 ./appimagetool-x86_64.AppImage RockNix.AppDir RockNix_Manager-Linux.AppImage
 
       - name: Salvar Arquivo Pronto
         uses: actions/upload-artifact@v4
