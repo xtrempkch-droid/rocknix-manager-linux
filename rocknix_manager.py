@@ -6,6 +6,26 @@
 # - Auditoria BIOS Remota (SSH) e Local ativadas.
 # - Configuração de Compressão e Ação em Massa restauradas.
 
+import sys
+from PyQt6.QtWidgets import QApplication, QStyleFactory
+
+def main():
+    app = QApplication(sys.argv)
+    
+    # Isso força o tema 'Fusion', que é o mais estável e bonito para apps portáteis
+    app.setStyle(QStyleFactory.create("Fusion"))
+    
+    # (Opcional) Se quiser um visual 'Dark Mode' básico para combinar com o RockNix:
+    from PyQt6.QtGui import QPalette, QColor
+    palette = QPalette()
+    palette.setColor(QPalette.ColorRole.Window, QColor(53, 53, 53))
+    palette.setColor(QPalette.ColorRole.WindowText, QColor(255, 255, 255))
+    palette.setColor(QPalette.ColorRole.Button, QColor(53, 53, 53))
+    palette.setColor(QPalette.ColorRole.ButtonText, QColor(255, 255, 255))
+    app.setPalette(palette)
+
+    # ... resto do seu código ...
+
 import sys, os, shutil, socket, subprocess, hashlib, tempfile, zipfile, time, locale
 from pathlib import Path
 from PyQt6.QtWidgets import (
