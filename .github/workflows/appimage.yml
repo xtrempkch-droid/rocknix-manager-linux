@@ -17,27 +17,29 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y python3-tk python3-pip libfuse2 python3-dev
 
-      - name: Baixar Ferramentas de Build
+      - name: Instalar Gerador de AppImage Python
         run: |
-          wget https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage
-          wget https://github.com/linuxdeploy/linuxdeploy-plugin-python/releases/download/continuous/linuxdeploy-plugin-python-x86_64.AppImage
-          chmod +x linuxdeploy-x86_64.AppImage
-          chmod +x linuxdeploy-plugin-python-x86_64.AppImage
+          # Instalando a ferramenta que empacota o Python de forma estável
+          python3 -m pip install targeted-python-appimage
 
       - name: Gerar AppImage
-        env:
-          PYTHON_VERSION: "3.11"
-          APPIMAGETOOL_CACHE_ALLOWED: "1"
-          OUTPUT: "RockNix_Manager-Linux.AppImage"
         run: |
-          # Criar um arquivo de ícone simples se não existir
-          touch icon.png 
-          ./linuxdeploy-x86_64.AppImage --appdir AppDir \
-            -e rocknix_manager.py \
-            -d rocknix-manager.desktop \
-            -i icon.png \
-            --plugin python \
-            --output appimage
+          # Criando arquivos básicos necessários para o pacote não dar erro
+          touch icon.png
+          
+          # Se o seu arquivo desktop não existir, este comando cria um básico
+          if [ ! -f rocknix-manager.desktop ]; then
+            echo -e "[Desktop Entry]\nType=Application\nName=RockNix Manager\nExec=rocknix_manager\nIcon=icon\nCategories=Utility;" > rocknix-manager.desktop
+          fi
+
+          # Comando para construir o AppImage do seu script
+          # Ele vai baixar o Python isolado e colocar seu script dentro
+          python3 -m targeted_python_appimage \
+            --python-version 3.11 \
+            --executable rocknix_manager.py \
+            --desktop-file rocknix-manager.desktop \
+            --icon-file icon.png \
+            --output RockNix_Manager-Linux.AppImage
 
       - name: Salvar Arquivo Pronto
         uses: actions/upload-artifact@v4
